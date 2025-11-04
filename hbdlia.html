@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pastel Dream — Birthday Surprise 🎂</title>
+
+    <!-- Font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind (CDN quick) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <!-- canvas-confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+    <style>
+      :root {
+        --ivory: #fff5f5;
+        --pastel-pink: #ffd6d6;
+        --pastel-rose: #ffbfbf;
+        --pastel-lilac: #ffe0e0;
+        --pastel-sky: #fff0f0;
+        --muted: #6b7280;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(
+          160deg,
+          var(--ivory) 0%,
+          #fff0f0 40%,
+          #ffe8e8 100%
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 28px;
+      }
+
+      .max-w-app {
+        max-width: 1100px;
+        width: 100%;
+      }
+      .card-panel {
+        min-height: 360px;
+      }
+
+      .gift-shadow {
+        box-shadow: 0 24px 60px rgba(99, 102, 241, 0.06);
+      }
+      .box-base {
+        background-color: #ffd6d6;
+        border-radius: 18px;
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(255, 182, 182, 0.15);
+      }
+      .ribbon-vert {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 34px;
+        background: #ffbfbf;
+        height: 100%;
+      }
+      .ribbon-hor {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        transform: translateY(-50%);
+        height: 14px;
+        width: 100%;
+        background: #ffbfbf;
+      }
+      .bow {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: -24px;
+        width: 86px;
+        height: 36px;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .bow .loop {
+        position: absolute;
+        width: 44px;
+        height: 28px;
+        background: linear-gradient(135deg, #ffc9c9, #ffb3b3);
+        border-radius: 999px;
+      }
+      .bow .loop.left {
+        left: -28px;
+        transform: rotate(18deg);
+      }
+      .bow .loop.right {
+        right: -28px;
+        transform: rotate(-18deg);
+      }
+      .bow .knot {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 24px;
+        height: 24px;
+        background: #ffb3b3;
+        border-radius: 50%;
+      }
+
+      .lid {
+        position: absolute;
+        top: -34px;
+        left: -6px;
+        width: calc(100% + 12px);
+        height: 38px;
+        background-color: #ffaaaa;
+        border-radius: 12px 12px 8px 8px;
+        transform-origin: bottom center;
+        box-shadow: 0 8px 24px rgba(255, 170, 170, 0.2);
+      }
+
+      .cake-wrap {
+        position: relative;
+        width: 160px;
+        height: 140px;
+        margin-top: 8px;
+      }
+      .layer {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 14px;
+        box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
+      }
+      .layer.bottom {
+        width: 150px;
+        height: 38px;
+        bottom: 0;
+        background: linear-gradient(180deg, #ffd6d6, #ffbfbf);
+      }
+      .layer.middle {
+        width: 136px;
+        height: 34px;
+        bottom: 38px;
+        background: linear-gradient(180deg, #ffe6e6, #ffd9d9);
+      }
+      .layer.top {
+        width: 122px;
+        height: 30px;
+        bottom: 70px;
+        background: linear-gradient(180deg, #fff0f0, #ffe3e3);
+      }
+      .cream {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 70px;
+        width: 122px;
+        height: 12px;
+        border-radius: 8px;
+        background: linear-gradient(180deg, #fff5f5, #fff0f0);
+        box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.03);
+      }
+      .candle {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 10px;
+        width: 8px;
+        height: 36px;
+        border-radius: 4px;
+        background: repeating-linear-gradient(
+          45deg,
+          #fff,
+          #fff 6px,
+          #ffd6e8 6px,
+          #ffd6e8 12px
+        );
+      }
+      .flame {
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px;
+        height: 16px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 50% 20%,
+          #fff8b3 0%,
+          #ffd066 45%,
+          #ff7b2e 80%,
+          transparent 100%
+        );
+        filter: drop-shadow(0 0 10px rgba(255, 170, 60, 0.6));
+        transform-origin: center bottom;
+        animation: flame 0.14s infinite linear alternate;
+      }
+      @keyframes flame {
+        from {
+          transform: translateX(-50%) scaleY(1);
+        }
+        to {
+          transform: translateX(-50%) scaleY(1.12);
+        }
+      }
+
+      .sparkle {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        pointer-events: none;
+        opacity: 0.85;
+        transform: translate(-50%, -50%);
+      }
+
+      @media (max-width: 880px) {
+        .gift-area {
+          transform: scale(0.95);
+        }
+      }
+      @media (max-width: 520px) {
+        .layout {
+          flex-direction: column-reverse;
+        }
+        .card-panel {
+          padding: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="max-w-app">
+      <div id="mainLayout" class="flex layout items-center justify-center transition-all duration-700 ease-in-out">
+        <!-- LEFT -->
+        <div id="leftPanel" class="flex flex-col items-center transform transition-all duration-700 ease-in-out">
+          <div class="text-center mb-5">
+            <h3 class="text-2xl font-extrabold text-slate-800">
+              Halo Lia
+            </h3>
+            <p class="text-sm text-gray-500 mt-1">
+              Klik kotak atau tekan tombol <strong>Open</strong> untuk membuka
+              🎁
+            </p>
+          </div>
+
+          <div class="relative gift-area w-56 h-56 md:w-64 md:h-64">
+            <div
+              id="sparkles"
+              class="absolute inset-0 pointer-events-none"
+            ></div>
+
+            <button
+              id="openBtn"
+              aria-label="Open gift"
+              class="w-full h-full rounded-xl relative gift-shadow focus:outline-none"
+            >
+              <div id="box" class="box-base w-full h-full rounded-xl">
+                <div class="ribbon-vert"></div>
+                <div class="ribbon-hor"></div>
+
+                <div class="bow" id="bow">
+                  <div class="loop left"></div>
+                  <div class="loop right"></div>
+                  <div class="knot"></div>
+                </div>
+
+                <div id="lid" class="lid"></div>
+              </div>
+            </button>
+
+            <div
+              id="boxShadow"
+              class="absolute left-1/2 transform -translate-x-1/2 bottom-0 w-64 h-7 bg-black/10 rounded-full blur-xl pointer-events-none"
+            ></div>
+          </div>
+
+          <div class="mt-6 flex gap-3">
+            <button
+              id="openControl"
+              class="px-5 py-2.5 rounded-lg bg-rose-300 text-white font-semibold shadow hover:bg-rose-400"
+            >
+              Open
+            </button>
+            <button
+              id="reset"
+              class="px-4 py-2 rounded-lg bg-white text-slate-700 border"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div
+          id="rightPanel"
+          class="card-panel w-full md:w-1/2 bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center justify-center hidden transition-all duration-700 ease-in-out"
+        >
+          <div class="w-full flex justify-center mb-3">
+            <div
+              class="w-28 h-1 rounded-full"
+              style="background: linear-gradient(90deg, #ffd6e8, #e8d9ff)"
+            ></div>
+          </div>
+
+          <article
+            id="card"
+            class="w-full max-w-lg mx-auto opacity-0 scale-95 transform transition-all duration-700"
+          >
+            <div
+              class="relative w-full h-72 rounded-xl overflow-hidden bg-gradient-to-br from-rose-50 to-pink-50 shadow-2xl p-6 flex flex-col items-center justify-center text-center"
+            >
+              <h1 id="cardTitle" class="text-3xl font-extrabold text-slate-800">
+                Selamat Ulang Tahun 🎂
+              </h1>
+              <p id="cardMsg" class="mt-3 text-gray-600">
+                Semua doa terbaik buat kamu hari ini! 
+              </p>
+
+              <div class="cake-wrap mt-6">
+                <div class="layer bottom"></div>
+                <div class="layer middle"></div>
+                <div class="layer top"></div>
+                <div class="cream"></div>
+                <div class="candle"><div class="flame"></div></div>
+              </div>
+            </div>
+          </article>
+
+          <p class="mt-6 text-xs text-gray-400">
+            Hadiah dari aku nyusul ya
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <audio id="music">
+      <source src="hbdvoice.mp3" type="audio/mpeg" />
+      Your browser does not support the audio element.
+    </audio>
+
+    <script>
+      const openBtn = document.getElementById("openBtn");
+      const openControl = document.getElementById("openControl");
+      const resetBtn = document.getElementById("reset");
+      const lid = document.getElementById("lid");
+      const box = document.getElementById("box");
+      const boxShadow = document.getElementById("boxShadow");
+      const card = document.getElementById("card");
+      const sparklesContainer = document.getElementById("sparkles");
+      const music = document.getElementById("music");
+      let opened = false;
+      const rnd = (min, max) =>
+        Math.floor(Math.random() * (max - min + 1)) + min;
+
+      function spawnSparkles(n = 10) {
+        for (let i = 0; i < n; i++) {
+          const s = document.createElement("div");
+          s.className = "sparkle";
+          s.style.left = `${rnd(20, 80)}%`;
+          s.style.top = `${rnd(15, 80)}%`;
+          s.style.background = ["#ffd6e8", "#e8d9ff", "#dff7ff", "#fff6e0"][
+            rnd(0, 3)
+          ];
+          sparklesContainer.appendChild(s);
+          gsap.to(s, {
+            y: -10 - Math.random() * 40,
+            x: `+=${rnd(-10, 10)}`,
+            opacity: 0.6,
+            duration: 1.4 + Math.random(),
+            yoyo: true,
+            repeat: -1,
+            ease: "sine.inOut",
+            delay: Math.random(),
+          });
+          setTimeout(() => s.remove(), 9000 + rnd(0, 4000));
+        }
+      }
+
+      // confetti meledak-ledak super meriah
+      function meriahConfetti() {
+        const colors = [
+          "#ffd6d6",
+          "#ffbfbf",
+          "#ffe0e0",
+          "#fff0f0",
+          "#ffb3b3",
+          "#ffc9c9",
+          "#ffe6e6",
+        ];
+        confetti({
+          particleCount: 300,
+          spread: 160,
+          startVelocity: 80,
+          origin: { x: 0.5, y: 0.6 },
+          colors,
+        });
+        confetti({
+          particleCount: 150,
+          angle: 60,
+          spread: 120,
+          origin: { x: 0 },
+          colors,
+        });
+        confetti({
+          particleCount: 150,
+          angle: 120,
+          spread: 120,
+          origin: { x: 1 },
+          colors,
+        });
+        for (let i = 0; i < 4; i++) {
+          setTimeout(() => {
+            confetti({
+              particleCount: 120,
+              spread: 100,
+              startVelocity: 70 + Math.random() * 20,
+              origin: { x: Math.random(), y: Math.random() * 0.2 },
+              colors,
+            });
+          }, i * 250);
+        }
+        for (let i = 0; i < 5; i++) {
+          setTimeout(() => {
+            confetti({
+              particleCount: 60,
+              spread: 70,
+              startVelocity: 40,
+              scalar: 0.8 + Math.random() * 0.3,
+              origin: { x: Math.random(), y: 0 },
+              colors,
+            });
+          }, 1000 + i * 300);
+        }
+        const drizzle = setInterval(() => {
+          confetti({
+            particleCount: 25,
+            spread: 70,
+            startVelocity: 25,
+            origin: { x: Math.random(), y: 0 },
+            colors,
+          });
+        }, 180);
+        setTimeout(() => clearInterval(drizzle), 6000);
+      }
+
+      function spawnBalloons() {
+        const colors = ["#ffd6e8", "#e8d9ff", "#dff7ff", "#fff6e0"];
+        for (let i = 0; i < 6; i++) {
+          const b = document.createElement("div");
+          b.style.position = "absolute";
+          b.style.left = `${60 + rnd(-30, 40)}%`;
+          b.style.top = `${60 + rnd(-30, 20)}%`;
+          b.style.width = `${rnd(18, 34)}px`;
+          b.style.height = `${rnd(22, 46)}px`;
+          b.style.background = colors[rnd(0, colors.length - 1)];
+          b.style.borderRadius = "50% 50% 50% 50% / 60% 60% 40% 40%";
+          b.style.opacity = "0.96";
+          b.style.zIndex = 2000;
+          document.body.appendChild(b);
+          gsap.to(b, {
+            y: -600 - rnd(0, 120),
+            x: `+=${rnd(-120, 120)}`,
+            duration: 5 + Math.random() * 2,
+            ease: "power1.out",
+            onComplete: () => b.remove(),
+          });
+        }
+      }
+
+      function openSequence() {
+        if (opened) return;
+        opened = true;
+        const rightPanel = document.getElementById("rightPanel");
+        const mainLayout = document.getElementById("mainLayout");
+        const leftPanel = document.getElementById("leftPanel");
+        
+        // First animate the box opening
+        const tl = gsap.timeline();
+        tl.to(box, { scale: 1.06, y: -12, duration: 0.28, ease: "power2.out" })
+          .to(boxShadow, { scaleX: 1.2, duration: 0.28 }, "<")
+          .to(lid, { y: -20, duration: 0.6, ease: "back.out(1.6)" }, "+=0.04")
+          .to("#bow", { y: -10, duration: 0.6, ease: "power2.out" }, "<")
+          .to(boxShadow, { scaleX: 0.9, duration: 0.5 }, "<")
+          .to(box, { y: 0, scale: 1, duration: 0.55, ease: "bounce.out" })
+          // Then move the box to the left
+          .to(mainLayout, { 
+            gap: "2.5rem",
+            duration: 0.7,
+            ease: "power2.inOut"
+          })
+          .to(leftPanel, {
+            x: "-25%",
+            duration: 0.7,
+            ease: "power2.inOut"
+          }, "<")
+          // Show the right panel
+          .add(() => {
+            rightPanel.classList.remove("hidden");
+            rightPanel.style.transform = "translateX(25%)";
+            rightPanel.style.opacity = "0";
+          })
+          .to(rightPanel, {
+            opacity: 1,
+            x: "0%",
+            duration: 0.7,
+            ease: "power2.out"
+          });
+
+        setTimeout(() => {
+          try {
+            music.currentTime = 0;
+            music.volume = 0.95;
+            music.play().catch(() => {});
+          } catch (e) {}
+        }, 1500); // delay 2 detik
+
+        gsap.timeline()
+          .to(box, { scale: 1.06, y: -12, duration: 0.28, ease: "power2.out" })
+          .to(boxShadow, { scaleX: 1.2, duration: 0.28 }, "<")
+          .to(lid, { y: -20, duration: 0.6, ease: "back.out(1.6)" }, "+=0.04")
+          .to("#bow", { y: -10, duration: 0.6, ease: "power2.out" }, "<")
+          .to(boxShadow, { scaleX: 0.9, duration: 0.5 }, "<")
+          .to(box, { y: 0, scale: 1, duration: 0.55, ease: "bounce.out" })
+          .add(() => {
+            meriahConfetti();
+            spawnBalloons();
+            spawnSparkles(12);
+          })
+          .to(
+            card,
+            { opacity: 1, scale: 1, duration: 1.0, ease: "elastic.out(1,0.6)" },
+            "+=0.08"
+          );
+      }
+
+      openBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        openSequence();
+      });
+      openControl.addEventListener("click", openSequence);
+      openBtn.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openSequence();
+        }
+      });
+      resetBtn.addEventListener("click", () => {
+        opened = false;
+        gsap.killTweensOf("*");
+        
+        const rightPanel = document.getElementById("rightPanel");
+        const mainLayout = document.getElementById("mainLayout");
+        const leftPanel = document.getElementById("leftPanel");
+
+        // Reset animations
+        gsap.timeline()
+          .to(rightPanel, {
+            opacity: 0,
+            x: "25%",
+            duration: 0.5,
+            ease: "power2.in",
+            onComplete: () => rightPanel.classList.add("hidden")
+          })
+          .to(leftPanel, {
+            x: "0%",
+            duration: 0.5,
+            ease: "power2.out"
+          }, "<")
+          .to(mainLayout, {
+            gap: "0rem",
+            duration: 0.5,
+            ease: "power2.out"
+          }, "<")
+          .to(lid, { y: 0, duration: 0.45, ease: "power2.out" })
+          .to("#bow", { y: 0, duration: 0.45, ease: "power2.out" }, "<")
+          .to(box, { scale: 1, y: 0, duration: 0.45, ease: "power2.out" }, "<")
+          .to(card, {
+            opacity: 0,
+            scale: 0.95,
+            duration: 0.45,
+            ease: "power2.out",
+          }, "<");
+
+        try {
+          music.pause();
+          music.currentTime = 0;
+        } catch (e) {}
+        spawnSparkles(6);
+      });
+
+      spawnSparkles(10);
+    </script>
+  </body>
+</html>
