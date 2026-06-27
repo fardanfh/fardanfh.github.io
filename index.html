@@ -1,314 +1,177 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="icon" href="img/flowers.png" type="image/x-icon">
-    <title>flowers</title>
-</head>
-<body class="container">
+    <title>RFID Bulk Scanner</title>
+    <style>
+        /* Desain UI Sederhana dan Responsif */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 20px; 
+            background-color: #f4f7f6; 
+            margin: 0;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05); 
+        }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        .instruction { text-align: center; color: #777; font-size: 14px; margin-bottom: 20px; }
+        
+        /* Input Field Styling */
+        #rfidInput { 
+            width: 100%; 
+            padding: 12px; 
+            font-size: 18px; 
+            margin-bottom: 20px; 
+            box-sizing: border-box; 
+            border: 2px solid #007bff; 
+            border-radius: 6px;
+            outline: none;
+        }
+        #rfidInput:focus { background-color: #eef6ff; }
 
-  <!-- Pembuat code: https://codepen.io/mdusmanansari/pen/BamepLe -->
-    <div class="night">
+        /* Status & Tombol */
+        .header-action { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 15px; 
+            font-weight: bold; 
+            color: #555;
+        }
+        button {
+            padding: 8px 12px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background-color: #c82333; }
+
+        /* List Styling */
+        #tagList { 
+            list-style-type: none; 
+            padding: 0; 
+            margin: 0;
+            max-height: 400px; 
+            overflow-y: auto; 
+            border: 1px solid #ddd; 
+            border-radius: 6px;
+        }
+        #tagList li { 
+            padding: 12px 15px; 
+            border-bottom: 1px solid #eee; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            font-family: monospace;
+            font-size: 16px;
+        }
+        #tagList li:nth-child(even) { background-color: #fcfcfc; }
+        #tagList li:last-child { border-bottom: none; }
+        
+        .time-badge { 
+            background: #28a745; 
+            color: white; 
+            padding: 4px 8px; 
+            border-radius: 12px; 
+            font-size: 12px; 
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Scanner RFID Massal</h2>
+        <p class="instruction">Tekan pelatuk handheld untuk mulai memindai. Kursor akan otomatis dijaga pada kotak input.</p>
+
+        <input type="text" id="rfidInput" placeholder="Arahkan kursor ke sini..." autofocus autocomplete="off">
+
+        <div class="header-action">
+            <span>Total Tag Unik: <span id="totalTags" style="color: #007bff; font-size: 18px;">0</span></span>
+            <button onclick="clearList()">Reset Data</button>
+        </div>
+
+        <ul id="tagList"></ul>
     </div>
-    <div class="flowers">
-      <div class="flower flower--1">
-        <div class="flower__leafs flower__leafs--1">
-          <div class="flower__leaf flower__leaf--1"></div>
-          <div class="flower__leaf flower__leaf--2"></div>
-          <div class="flower__leaf flower__leaf--3"></div>
-          <div class="flower__leaf flower__leaf--4"></div>
-          <div class="flower__white-circle"></div>
-  
-          <div class="flower__light flower__light--1"></div>
-          <div class="flower__light flower__light--2"></div>
-          <div class="flower__light flower__light--3"></div>
-          <div class="flower__light flower__light--4"></div>
-          <div class="flower__light flower__light--5"></div>
-          <div class="flower__light flower__light--6"></div>
-          <div class="flower__light flower__light--7"></div>
-          <div class="flower__light flower__light--8"></div>
-  
-        </div>
-        <div class="flower__line">
-          <div class="flower__line__leaf flower__line__leaf--1"></div>
-          <div class="flower__line__leaf flower__line__leaf--2"></div>
-          <div class="flower__line__leaf flower__line__leaf--3"></div>
-          <div class="flower__line__leaf flower__line__leaf--4"></div>
-          <div class="flower__line__leaf flower__line__leaf--5"></div>
-          <div class="flower__line__leaf flower__line__leaf--6"></div>
-        </div>
-      </div>
-  
-      <div class="flower flower--2">
-        <div class="flower__leafs flower__leafs--2">
-          <div class="flower__leaf flower__leaf--1"></div>
-          <div class="flower__leaf flower__leaf--2"></div>
-          <div class="flower__leaf flower__leaf--3"></div>
-          <div class="flower__leaf flower__leaf--4"></div>
-          <div class="flower__white-circle"></div>
-  
-          <div class="flower__light flower__light--1"></div>
-          <div class="flower__light flower__light--2"></div>
-          <div class="flower__light flower__light--3"></div>
-          <div class="flower__light flower__light--4"></div>
-          <div class="flower__light flower__light--5"></div>
-          <div class="flower__light flower__light--6"></div>
-          <div class="flower__light flower__light--7"></div>
-          <div class="flower__light flower__light--8"></div>
-  
-        </div>
-        <div class="flower__line">
-          <div class="flower__line__leaf flower__line__leaf--1"></div>
-          <div class="flower__line__leaf flower__line__leaf--2"></div>
-          <div class="flower__line__leaf flower__line__leaf--3"></div>
-          <div class="flower__line__leaf flower__line__leaf--4"></div>
-        </div>
-      </div>
-  
-      <div class="flower flower--3">
-        <div class="flower__leafs flower__leafs--3">
-          <div class="flower__leaf flower__leaf--1"></div>
-          <div class="flower__leaf flower__leaf--2"></div>
-          <div class="flower__leaf flower__leaf--3"></div>
-          <div class="flower__leaf flower__leaf--4"></div>
-          <div class="flower__white-circle"></div>
-  
-          <div class="flower__light flower__light--1"></div>
-          <div class="flower__light flower__light--2"></div>
-          <div class="flower__light flower__light--3"></div>
-          <div class="flower__light flower__light--4"></div>
-          <div class="flower__light flower__light--5"></div>
-          <div class="flower__light flower__light--6"></div>
-          <div class="flower__light flower__light--7"></div>
-          <div class="flower__light flower__light--8"></div>
-  
-        </div>
-        <div class="flower__line">
-          <div class="flower__line__leaf flower__line__leaf--1"></div>
-          <div class="flower__line__leaf flower__line__leaf--2"></div>
-          <div class="flower__line__leaf flower__line__leaf--3"></div>
-          <div class="flower__line__leaf flower__line__leaf--4"></div>
-        </div>
-      </div>
-  
-      <div class="grow-ans" style="--d:1.2s">
-        <div class="flower__g-long">
-          <div class="flower__g-long__top"></div>
-          <div class="flower__g-long__bottom"></div>
-        </div>
-      </div>
-  
-      <div class="growing-grass">
-        <div class="flower__grass flower__grass--1">
-          <div class="flower__grass--top"></div>
-          <div class="flower__grass--bottom"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--1"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--2"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--3"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--4"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--5"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--6"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--7"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--8"></div>
-          <div class="flower__grass__overlay"></div>
-        </div>
-      </div>
-  
-      <div class="growing-grass">
-        <div class="flower__grass flower__grass--2">
-          <div class="flower__grass--top"></div>
-          <div class="flower__grass--bottom"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--1"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--2"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--3"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--4"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--5"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--6"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--7"></div>
-          <div class="flower__grass__leaf flower__grass__leaf--8"></div>
-          <div class="flower__grass__overlay"></div>
-        </div>
-      </div>
-  
-      <div class="grow-ans" style="--d:2.4s">
-        <div class="flower__g-right flower__g-right--1">
-          <div class="leaf"></div>
-        </div>
-      </div>
-  
-      <div class="grow-ans" style="--d:2.8s">
-        <div class="flower__g-right flower__g-right--2">
-          <div class="leaf"></div>
-        </div>
-      </div>
-  
-      <div class="grow-ans" style="--d:2.8s">
-        <div class="flower__g-front">
-          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--1">
-            <div class="flower__g-front__leaf"></div>
-          </div>
-          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--2">
-            <div class="flower__g-front__leaf"></div>
-          </div>
-          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--3">
-            <div class="flower__g-front__leaf"></div>
-          </div>
-          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--4">
-            <div class="flower__g-front__leaf"></div>
-          </div>
-          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--5">
-            <div class="flower__g-front__leaf"></div>
-          </div>
-          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--6">
-            <div class="flower__g-front__leaf"></div>
-          </div>
-          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--7">
-            <div class="flower__g-front__leaf"></div>
-          </div>
-          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--8">
-            <div class="flower__g-front__leaf"></div>
-          </div>
-          <div class="flower__g-front__line"></div>
-        </div>
-      </div>
-  
-      <div class="grow-ans" style="--d:3.2s">
-        <div class="flower__g-fr">
-          <div class="leaf"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--1"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--2"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--3"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--4"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--5"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--6"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--7"></div>
-          <div class="flower__g-fr__leaf flower__g-fr__leaf--8"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--0">
-        <div class="grow-ans" style="--d:3s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:2.2s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.4s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.6s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--1">
-        <div class="grow-ans" style="--d:3.6s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.8s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:4s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.2s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--2">
-        <div class="grow-ans" style="--d:4s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.2s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.4s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.6s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--3">
-        <div class="grow-ans" style="--d:4s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.2s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:3s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.6s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--4">
-        <div class="grow-ans" style="--d:4s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.2s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:3s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.6s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--5">
-        <div class="grow-ans" style="--d:4s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.2s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:3s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.6s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--6">
-        <div class="grow-ans" style="--d:4.2s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.4s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.6s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:4.8s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-  
-      <div class="long-g long-g--7">
-        <div class="grow-ans" style="--d:3s">
-          <div class="leaf leaf--0"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.2s">
-          <div class="leaf leaf--1"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.5s">
-          <div class="leaf leaf--2"></div>
-        </div>
-        <div class="grow-ans" style="--d:3.6s">
-          <div class="leaf leaf--3"></div>
-        </div>
-      </div>
-    </div>
-    <script src="main.js"></script>
-  </body>
+
+    <script>
+        // Inisialisasi elemen HTML
+        const rfidInput = document.getElementById('rfidInput');
+        const tagList = document.getElementById('tagList');
+        const totalTagsDisplay = document.getElementById('totalTags');
+
+        // Menggunakan struktur data 'Set' untuk menolak tag duplikat secara otomatis
+        let scannedTags = new Set();
+
+        // 1. Event listener utama untuk menangkap input scanner
+        rfidInput.addEventListener('keypress', function(event) {
+            // Scanner selalu mengirim 'Enter' di akhir pembacaan satu tag
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Mencegah form submit default
+                const tagValue = rfidInput.value.trim();
+
+                if (tagValue !== "") {
+                    processTag(tagValue);
+                }
+
+                // Segera kosongkan input agar siap untuk tag berikutnya secepat kilat
+                rfidInput.value = '';
+            }
+        });
+
+        // 2. Fungsi untuk memproses tag
+        function processTag(tag) {
+            // Cek apakah tag sudah ada di dalam Set (mencegah duplikat karena bulk scan)
+            if (!scannedTags.has(tag)) {
+                scannedTags.add(tag);
+                updateUI(tag);
+            }
+        }
+
+        // 3. Fungsi untuk memperbarui tampilan List di HTML
+        function updateUI(tag) {
+            totalTagsDisplay.textContent = scannedTags.size;
+
+            const li = document.createElement('li');
+            li.textContent = tag;
+
+            // Tambahkan penanda waktu scan (opsional)
+            const timeBadge = document.createElement('span');
+            const now = new Date();
+            timeBadge.textContent = now.toLocaleTimeString('id-ID');
+            timeBadge.className = 'time-badge';
+            li.appendChild(timeBadge);
+
+            // Selalu tambahkan tag terbaru ke urutan paling atas
+            tagList.insertBefore(li, tagList.firstChild);
+        }
+
+        // 4. Memaksa fokus kembali ke input box jika user tidak sengaja klik area lain
+        document.addEventListener('click', function(event) {
+            if (event.target.tagName !== 'BUTTON') {
+                rfidInput.focus();
+            }
+        });
+
+        // 5. Fungsi untuk mereset data
+        function clearList() {
+            if(confirm("Hapus semua tag yang telah dipindai?")) {
+                scannedTags.clear();
+                tagList.innerHTML = '';
+                totalTagsDisplay.textContent = '0';
+                rfidInput.focus();
+            }
+        }
+    </script>
+</body>
 </html>
