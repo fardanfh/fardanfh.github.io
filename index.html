@@ -3,34 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RFID Super Bulk Scanner</title>
+    <title>Chainway C72 Web RFID</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f4f7f6; margin: 0; }
         .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
         h2 { text-align: center; color: #333; margin-top: 0; }
-        .instruction { text-align: center; color: #777; font-size: 14px; margin-bottom: 20px; }
-        #rfidInput { width: 100%; padding: 12px; font-size: 18px; margin-bottom: 20px; box-sizing: border-box; border: 2px solid #007bff; border-radius: 6px; outline: none; }
-        #rfidInput:focus { background-color: #eef6ff; }
+        .instruction { text-align: center; color: #777; font-size: 14px; margin-bottom: 15px; }
+        
+        /* Menggunakan Textarea agar Android tidak menghentikan input beruntun */
+        #rfidInput { 
+            width: 100%; 
+            height: 80px; 
+            padding: 12px; 
+            font-size: 16px; 
+            margin-bottom: 20px; 
+            box-sizing: border-box; 
+            border: 2px solid #28a745; 
+            border-radius: 6px; 
+            outline: none;
+            resize: none;
+            background-color: #fdfdfd;
+        }
+        #rfidInput:focus { background-color: #eef6ff; border-color: #007bff; }
+        
         .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; color: #555; }
         button { padding: 8px 12px; background-color: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         button:hover { background-color: #c82333; }
+        
         #tagList { list-style-type: none; padding: 0; margin: 0; max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; }
-        #tagList li { padding: 10px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-family: monospace; font-size: 15px; }
+        #tagList li { padding: 10px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-family: monospace; font-size: 15px; color: #333; }
         #tagList li:nth-child(even) { background-color: #fcfcfc; }
         #tagList li:last-child { border-bottom: none; }
-        .time-badge { background: #28a745; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-family: sans-serif; }
+        .time-badge { background: #007bff; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-family: sans-serif; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>Scanner RFID Massal (Mode Cepat)</h2>
-        <p class="instruction">Tahan pelatuk handheld untuk memindai banyak tag sekaligus.</p>
+        <h2>Scanner Massal C72</h2>
+        <p class="instruction">Tekan pelatuk 1x. Scanner akan mengisi kotak di bawah ini secara massal.</p>
 
-        <input type="text" id="rfidInput" placeholder="Kursor harus di sini saat scan..." autofocus autocomplete="off">
+        <textarea id="rfidInput" placeholder="Kursor harus di sini... Scanner akan memborbardir teks ke kotak ini." autofocus></textarea>
 
         <div class="header-action">
-            <span>Total Tag Unik: <span id="totalTags" style="color: #007bff; font-size: 18px;">0</span></span>
+            <span>Total Unik: <span id="totalTags" style="color: #28a745; font-size: 20px;">0</span></span>
             <button onclick="clearList()">Reset Data</button>
         </div>
 
@@ -43,51 +59,37 @@
         const totalTagsDisplay = document.getElementById('totalTags');
 
         let scannedTags = new Set();
-        let scanBuffer = "";
         let processTimeout;
 
-        // 1. Tangkap input dari scanner secepat mungkin
-        rfidInput.addEventListener('input', function(event) {
-            // Gunakan debounce: tunggu scanner selesai 'menembak' dalam waktu 50ms, baru proses agar web tidak lag.
+        // Mendengarkan perubahan pada textarea
+        rfidInput.addEventListener('input', function() {
+            // Tunggu sampai scanner "berhenti menembak" selama 300 milidetik
+            // agar web tidak hang saat diserang ratusan tag sekaligus
             clearTimeout(processTimeout);
             
             processTimeout = setTimeout(() => {
                 processBulkData(rfidInput.value);
-                rfidInput.value = ''; // Kosongkan input setelah diproses
-            }, 50); 
+                rfidInput.value = ''; // Bersihkan kotak textarea setelah data dipindah ke list bawah
+            }, 300); 
         });
 
-        // 2. Jika scanner menggunakan tombol Enter (Sistem Backup)
-        rfidInput.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                clearTimeout(processTimeout);
-                processBulkData(rfidInput.value);
-                rfidInput.value = '';
-            }
-        });
-
-        // 3. Fungsi memproses data yang masuk (mendukung pemisahan koma, spasi, atau baris baru)
         function processBulkData(rawData) {
             if (!rawData.trim()) return;
 
-            // Pisahkan data jika scanner menggabungkannya dengan enter/koma/spasi
+            // Pisahkan data berdasarkan "Enter" (\n) atau spasi
             const incomingTags = rawData.split(/[\n\r,\s]+/);
-            
-            // Gunakan DocumentFragment agar proses penambahan ribuan data ke HTML tidak membuat browser hang
             const fragment = document.createDocumentFragment();
             let hasNewTags = false;
-
             const now = new Date().toLocaleTimeString('id-ID');
 
             incomingTags.forEach(tag => {
                 const cleanTag = tag.trim();
                 
+                // Mencegah masuknya tag kosong dan tag duplikat
                 if (cleanTag !== "" && !scannedTags.has(cleanTag)) {
                     scannedTags.add(cleanTag);
                     hasNewTags = true;
 
-                    // Buat elemen list baru
                     const li = document.createElement('li');
                     li.textContent = cleanTag;
 
@@ -96,28 +98,26 @@
                     timeBadge.className = 'time-badge';
                     li.appendChild(timeBadge);
 
-                    // Masukkan ke dalam fragment terlebih dahulu (belum ke layar)
-                    fragment.prepend(li);
+                    fragment.prepend(li); // Susun yang terbaru di atas
                 }
             });
 
-            // 4. Update layar sekaligus (Batch Update) untuk performa maksimal
+            // Update UI
             if (hasNewTags) {
                 tagList.insertBefore(fragment, tagList.firstChild);
                 totalTagsDisplay.textContent = scannedTags.size;
             }
         }
 
-        // Paksa fokus kembali ke input box jika terklik di luar
+        // Auto focus menjaga kursor tetap di textarea
         document.addEventListener('click', function(event) {
             if (event.target.tagName !== 'BUTTON') {
                 rfidInput.focus();
             }
         });
 
-        // Fungsi Reset
         function clearList() {
-            if(confirm("Hapus semua tag yang telah dipindai?")) {
+            if(confirm("Hapus semua data?")) {
                 scannedTags.clear();
                 tagList.innerHTML = '';
                 totalTagsDisplay.textContent = '0';
