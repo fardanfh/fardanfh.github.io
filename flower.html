@@ -3,98 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RFID Bulk Scanner</title>
+    <title>RFID Super Bulk Scanner</title>
     <style>
-        /* Desain UI Sederhana dan Responsif */
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            padding: 20px; 
-            background-color: #f4f7f6; 
-            margin: 0;
-        }
-        .container { 
-            max-width: 600px; 
-            margin: auto; 
-            background: white; 
-            padding: 20px; 
-            border-radius: 10px; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05); 
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f4f7f6; margin: 0; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
         h2 { text-align: center; color: #333; margin-top: 0; }
         .instruction { text-align: center; color: #777; font-size: 14px; margin-bottom: 20px; }
-        
-        /* Input Field Styling */
-        #rfidInput { 
-            width: 100%; 
-            padding: 12px; 
-            font-size: 18px; 
-            margin-bottom: 20px; 
-            box-sizing: border-box; 
-            border: 2px solid #007bff; 
-            border-radius: 6px;
-            outline: none;
-        }
+        #rfidInput { width: 100%; padding: 12px; font-size: 18px; margin-bottom: 20px; box-sizing: border-box; border: 2px solid #007bff; border-radius: 6px; outline: none; }
         #rfidInput:focus { background-color: #eef6ff; }
-
-        /* Status & Tombol */
-        .header-action { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            margin-bottom: 15px; 
-            font-weight: bold; 
-            color: #555;
-        }
-        button {
-            padding: 8px 12px;
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; color: #555; }
+        button { padding: 8px 12px; background-color: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         button:hover { background-color: #c82333; }
-
-        /* List Styling */
-        #tagList { 
-            list-style-type: none; 
-            padding: 0; 
-            margin: 0;
-            max-height: 400px; 
-            overflow-y: auto; 
-            border: 1px solid #ddd; 
-            border-radius: 6px;
-        }
-        #tagList li { 
-            padding: 12px 15px; 
-            border-bottom: 1px solid #eee; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            font-family: monospace;
-            font-size: 16px;
-        }
+        #tagList { list-style-type: none; padding: 0; margin: 0; max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; }
+        #tagList li { padding: 10px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-family: monospace; font-size: 15px; }
         #tagList li:nth-child(even) { background-color: #fcfcfc; }
         #tagList li:last-child { border-bottom: none; }
-        
-        .time-badge { 
-            background: #28a745; 
-            color: white; 
-            padding: 4px 8px; 
-            border-radius: 12px; 
-            font-size: 12px; 
-            font-family: sans-serif;
-        }
+        .time-badge { background: #28a745; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-family: sans-serif; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>Scanner RFID Massal</h2>
-        <p class="instruction">Tekan pelatuk handheld untuk mulai memindai. Kursor akan otomatis dijaga pada kotak input.</p>
+        <h2>Scanner RFID Massal (Mode Cepat)</h2>
+        <p class="instruction">Tahan pelatuk handheld untuk memindai banyak tag sekaligus.</p>
 
-        <input type="text" id="rfidInput" placeholder="Arahkan kursor ke sini..." autofocus autocomplete="off">
+        <input type="text" id="rfidInput" placeholder="Kursor harus di sini saat scan..." autofocus autocomplete="off">
 
         <div class="header-action">
             <span>Total Tag Unik: <span id="totalTags" style="color: #007bff; font-size: 18px;">0</span></span>
@@ -105,65 +38,84 @@
     </div>
 
     <script>
-        // Inisialisasi elemen HTML
         const rfidInput = document.getElementById('rfidInput');
         const tagList = document.getElementById('tagList');
         const totalTagsDisplay = document.getElementById('totalTags');
 
-        // Menggunakan struktur data 'Set' untuk menolak tag duplikat secara otomatis
         let scannedTags = new Set();
+        let scanBuffer = "";
+        let processTimeout;
 
-        // 1. Event listener utama untuk menangkap input scanner
+        // 1. Tangkap input dari scanner secepat mungkin
+        rfidInput.addEventListener('input', function(event) {
+            // Gunakan debounce: tunggu scanner selesai 'menembak' dalam waktu 50ms, baru proses agar web tidak lag.
+            clearTimeout(processTimeout);
+            
+            processTimeout = setTimeout(() => {
+                processBulkData(rfidInput.value);
+                rfidInput.value = ''; // Kosongkan input setelah diproses
+            }, 50); 
+        });
+
+        // 2. Jika scanner menggunakan tombol Enter (Sistem Backup)
         rfidInput.addEventListener('keypress', function(event) {
-            // Scanner selalu mengirim 'Enter' di akhir pembacaan satu tag
             if (event.key === 'Enter') {
-                event.preventDefault(); // Mencegah form submit default
-                const tagValue = rfidInput.value.trim();
-
-                if (tagValue !== "") {
-                    processTag(tagValue);
-                }
-
-                // Segera kosongkan input agar siap untuk tag berikutnya secepat kilat
+                event.preventDefault();
+                clearTimeout(processTimeout);
+                processBulkData(rfidInput.value);
                 rfidInput.value = '';
             }
         });
 
-        // 2. Fungsi untuk memproses tag
-        function processTag(tag) {
-            // Cek apakah tag sudah ada di dalam Set (mencegah duplikat karena bulk scan)
-            if (!scannedTags.has(tag)) {
-                scannedTags.add(tag);
-                updateUI(tag);
+        // 3. Fungsi memproses data yang masuk (mendukung pemisahan koma, spasi, atau baris baru)
+        function processBulkData(rawData) {
+            if (!rawData.trim()) return;
+
+            // Pisahkan data jika scanner menggabungkannya dengan enter/koma/spasi
+            const incomingTags = rawData.split(/[\n\r,\s]+/);
+            
+            // Gunakan DocumentFragment agar proses penambahan ribuan data ke HTML tidak membuat browser hang
+            const fragment = document.createDocumentFragment();
+            let hasNewTags = false;
+
+            const now = new Date().toLocaleTimeString('id-ID');
+
+            incomingTags.forEach(tag => {
+                const cleanTag = tag.trim();
+                
+                if (cleanTag !== "" && !scannedTags.has(cleanTag)) {
+                    scannedTags.add(cleanTag);
+                    hasNewTags = true;
+
+                    // Buat elemen list baru
+                    const li = document.createElement('li');
+                    li.textContent = cleanTag;
+
+                    const timeBadge = document.createElement('span');
+                    timeBadge.textContent = now;
+                    timeBadge.className = 'time-badge';
+                    li.appendChild(timeBadge);
+
+                    // Masukkan ke dalam fragment terlebih dahulu (belum ke layar)
+                    fragment.prepend(li);
+                }
+            });
+
+            // 4. Update layar sekaligus (Batch Update) untuk performa maksimal
+            if (hasNewTags) {
+                tagList.insertBefore(fragment, tagList.firstChild);
+                totalTagsDisplay.textContent = scannedTags.size;
             }
         }
 
-        // 3. Fungsi untuk memperbarui tampilan List di HTML
-        function updateUI(tag) {
-            totalTagsDisplay.textContent = scannedTags.size;
-
-            const li = document.createElement('li');
-            li.textContent = tag;
-
-            // Tambahkan penanda waktu scan (opsional)
-            const timeBadge = document.createElement('span');
-            const now = new Date();
-            timeBadge.textContent = now.toLocaleTimeString('id-ID');
-            timeBadge.className = 'time-badge';
-            li.appendChild(timeBadge);
-
-            // Selalu tambahkan tag terbaru ke urutan paling atas
-            tagList.insertBefore(li, tagList.firstChild);
-        }
-
-        // 4. Memaksa fokus kembali ke input box jika user tidak sengaja klik area lain
+        // Paksa fokus kembali ke input box jika terklik di luar
         document.addEventListener('click', function(event) {
             if (event.target.tagName !== 'BUTTON') {
                 rfidInput.focus();
             }
         });
 
-        // 5. Fungsi untuk mereset data
+        // Fungsi Reset
         function clearList() {
             if(confirm("Hapus semua tag yang telah dipindai?")) {
                 scannedTags.clear();
